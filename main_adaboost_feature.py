@@ -1,32 +1,37 @@
 __author__ = 'jiachiliu'
 
 from boost.cross_validation import train_test_shuffle_split
-from boost.dataset import load_spambase
+from boost.dataset import load_spambase, load_polluted_spambase
 from boost.AdaBoost import AdaBoost
 import numpy as np
 import timeit
 
 
-if __name__ == '__main__':
-
-    train = np.array([
-        [1.0],
-        [0.0],
-        [0.0],
-        [2.0],
-        [0.0],
-        [5.0],
-        [4.0],
-        [1.0]
-    ])
-
-    target = np.array([0, 0, 0, 1, 1, 0, 1, 0])
+def spambase(T=100):
     train, target = load_spambase()
     target = np.array(map(lambda v: -1.0 if v == 0 else 1.0, target))
 
     train, test, train_target, test_target = train_test_shuffle_split(train, target, len(train) / 10)
     boost = AdaBoost()
     start = timeit.default_timer()
-    boost.boost(train, train_target, test, test_target)
+    boost.boost(train, train_target, test, test_target, T)
     stop = timeit.default_timer()
     print "Total Run Time: %s secs" % (stop - start)
+
+
+def polluted_spambase(T=100):
+    train, train_target, test, test_target = load_polluted_spambase()
+    train_target = np.array(map(lambda v: -1.0 if v == 0 else 1.0, train_target))
+    test_target = np.array(map(lambda v: -1.0 if v == 0 else 1.0, test_target))
+    print "Train data: %s, Train Label: %s" % (train.shape, train_target.shape)
+    print "Test data: %s, Test Label: %s" % (test.shape, test_target.shape)
+    boost = AdaBoost()
+    start = timeit.default_timer()
+    boost.boost(train, train_target, test, test_target, T)
+    stop = timeit.default_timer()
+    print "Total Run Time: %s secs" % (stop - start)
+
+
+if __name__ == '__main__':
+    spambase(300)
+    # polluted_spambase(100)

@@ -3,6 +3,8 @@ __author__ = 'jiachiliu'
 import numpy as np
 from ranking import auc, roc
 from validation import confusion_matrix, confusion_matrix_analysis
+import sys
+from feature_analysis import MarginAnalysis
 
 
 class Cache:
@@ -22,10 +24,13 @@ class OptimalLearner:
         weighted_error = None
         selected_feature = -1
         selected_threshold = None
+        progress = 0
         for f in range(n):
             error_on_feature = -1
             weighted_err_on_feature = -1
             threshold = None
+            progress += 1
+            self.print_progress(progress, n)
             if f in self.cache:
                 error_on_feature, weighted_err_on_feature, threshold = self.find_best_error_on_cache(self.cache[f],
                                                                                                      dist)
@@ -51,7 +56,10 @@ class OptimalLearner:
             to_remove = cache[i].to_remove
             current_threshold = cache[i].threshold
 
-            current_weighted_error += d[to_add].sum() - d[to_remove].sum()
+            for a in to_add:
+                current_weighted_error += d[a]
+            for r in to_remove:
+                current_weighted_error -= d[r]
 
             current_abs_error = self.abs_error(current_weighted_error)
             if current_abs_error > best_abs_error:
@@ -102,6 +110,11 @@ class OptimalLearner:
         return best_abs_error, best_weighted_error, best_threshold
 
     @staticmethod
+    def print_progress(k, max_loop):
+        sys.stdout.write("\rProgress: %s/%s: " % (k, max_loop))
+        sys.stdout.flush()
+
+    @staticmethod
     def update(p, t, d, to_change):
         delta = 0.0
         to_add = []
@@ -123,7 +136,7 @@ class OptimalLearner:
 
 class AdaBoost:
     def __init__(self):
-        pass
+        self.weak_learners = []
 
     @staticmethod
     def hypothesis(f, t, data):
@@ -152,7 +165,7 @@ class AdaBoost:
         while round < T:
             f, t, weighted_err = learner.fit(train, train_target, weights)
             confidence = 0.5 * np.log((1.0 - weighted_err) / weighted_err)
-
+            self.weak_learners.append((f, t, confidence))
             predicts = self.hypothesis(f, t, train)
             train_predicts += confidence * predicts
             train_predicts_signed = self.sign(train_predicts)
@@ -174,3 +187,6 @@ class AdaBoost:
             weights = (weights * tmp) / (2.0 * np.sqrt(weighted_err * (1 - weighted_err)))
 
             round += 1
+
+        ma = MarginAnalysis(self.weak_learners)
+        ma.analyze(train, train_target)

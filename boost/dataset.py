@@ -31,3 +31,19 @@ def load_spambase():
     data = reader.read(',', float)
     total_col = data.shape[1]
     return data[:, :total_col - 1], data[:, total_col - 1]
+
+
+def load_polluted_spambase():
+    reader = CsvReader('data/spam_polluted/train_feature.txt')
+    train = reader.read(' ', float)
+
+    reader = CsvReader('data/spam_polluted/train_label.txt')
+    train_target = reader.read(' ', float).flatten()
+
+    reader = CsvReader('data/spam_polluted/test_feature.txt')
+    test = reader.read(' ', float)
+
+    reader = CsvReader('data/spam_polluted/test_label.txt')
+    test_target = reader.read(' ', float).flatten()
+
+    return train, train_target, test, test_target
