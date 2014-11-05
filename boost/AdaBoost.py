@@ -51,10 +51,7 @@ class OptimalLearner:
             to_remove = cache[i].to_remove
             current_threshold = cache[i].threshold
 
-            for a in to_add:
-                current_weighted_error += d[a]
-            for r in to_remove:
-                current_weighted_error -= d[r]
+            current_weighted_error += d[to_add].sum() - d[to_remove].sum()
 
             current_abs_error = self.abs_error(current_weighted_error)
             if current_abs_error > best_abs_error:
@@ -74,50 +71,35 @@ class OptimalLearner:
         :return: the maximum abs error, and corresponding weighted error and threshold
         """
         m = len(t)
-        arg = f.argsort()
+        args = f.argsort()
+        # Compute the errors with all positive label, in other words threshold is less than the min value of the feature
         p = np.ones(m)
         mismatch = np.where(p != t)[0]
         current_weighted_error = d[mismatch].sum()
         current_abs_error = self.abs_error(current_weighted_error)
-        current_threshold = f[arg[0]] - 0.5
-        self.cache[f_index] = [self.create_cache(mismatch, [], current_threshold)]
+        current_threshold = f[args[0]] - 0.5
+        self.cache[f_index] = [Cache(mismatch, [], current_threshold)]
 
         best_weighted_error = current_weighted_error
         best_abs_error = current_abs_error
         best_threshold = current_threshold
 
         start = 0
-        for i in range(1, m):
-            if f[arg[i]] == f[arg[i - 1]]:
-                continue
-            to_change = map(lambda v: arg[v], range(start, i))
-            start = i
-            delta_err, to_add, to_remove = self.update(p, t, d, to_change)
-            current_weighted_error += delta_err
-            current_abs_error = self.abs_error(current_weighted_error)
-            current_threshold = (f[arg[i - 1]] + f[arg[i]]) / 2
-            self.cache[f_index].append(self.create_cache(to_add, to_remove, current_threshold))
-            if current_abs_error > best_abs_error:
-                best_abs_error = current_abs_error
-                best_weighted_error = current_weighted_error
-                best_threshold = current_threshold
-
-        to_change = map(lambda v: arg[v], range(start, m))
-        delta_err, to_add, to_remove = self.update(p, t, d, to_change)
-        current_weighted_error += delta_err
-        current_abs_error = self.abs_error(current_weighted_error)
-        current_threshold = f[arg[-1]] + 0.5
-        self.cache[f_index].append(self.create_cache(to_add, to_remove, current_threshold))
-        if current_abs_error > best_abs_error:
-            best_abs_error = current_abs_error
-            best_weighted_error = current_weighted_error
-            best_threshold = current_threshold
+        for i in range(1, m + 1):
+            if i == m or f[args[i]] != f[args[i - 1]]:
+                to_change = map(lambda v: args[v], range(start, i))
+                delta_err, to_add, to_remove = self.update(p, t, d, to_change)
+                current_weighted_error += delta_err
+                current_abs_error = self.abs_error(current_weighted_error)
+                current_threshold = (f[args[i - 1]] + f[args[i]]) / 2 if i != m else f[args[-1]] + 0.5
+                self.cache[f_index].append(Cache(to_add, to_remove, current_threshold))
+                if current_abs_error > best_abs_error:
+                    best_abs_error = current_abs_error
+                    best_weighted_error = current_weighted_error
+                    best_threshold = current_threshold
+                start = i
 
         return best_abs_error, best_weighted_error, best_threshold
-
-    @staticmethod
-    def create_cache(to_add, to_remove, threshold):
-        return Cache(to_add, to_remove, threshold)
 
     @staticmethod
     def update(p, t, d, to_change):
@@ -145,13 +127,7 @@ class AdaBoost:
 
     @staticmethod
     def hypothesis(f, t, data):
-        predicts = []
-        for d in data:
-            if d[f] > t:
-                predicts.append(1.0)
-            else:
-                predicts.append(-1.0)
-        return np.array(predicts)
+        return np.array([1.0 if d[f] > t else -1.0 for d in data])
 
     @staticmethod
     def sign(vals, negative=-1.0, positive=1.0):
@@ -161,13 +137,7 @@ class AdaBoost:
         :param vals: a list of value
         :return: a list of -1 or +1 based on the value
         """
-        res = []
-        for v in vals:
-            if v <= 0:
-                res.append(negative)
-            else:
-                res.append(positive)
-        return np.array(res)
+        return np.array([negative if v <= 0 else positive for v in vals])
 
     def boost(self, train, train_target, test, test_target, T=100):
         m, n = train.shape
@@ -200,9 +170,7 @@ class AdaBoost:
             print "round %s, feature: %s, threshold: %s, round_error: %s, train error: %s, test error: %s, auc: %s" % (
                 round, f, t, weighted_err, train_err, test_err, test_auc)
 
-            for w in range(len(weights)):
-                tmp = np.sqrt(weighted_err / (1.0 - weighted_err))
-                if train_target[w] != predicts[w]:
-                    tmp = np.sqrt((1.0 - weighted_err) / weighted_err)
-                weights[w] = (weights[w] * tmp) / (2.0 * np.sqrt(weighted_err * (1 - weighted_err)))
+            tmp = np.sqrt((weighted_err / (1.0 - weighted_err)) ** (train_target * predicts))
+            weights = (weights * tmp) / (2.0 * np.sqrt(weighted_err * (1 - weighted_err)))
+
             round += 1
