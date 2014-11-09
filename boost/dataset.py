@@ -47,3 +47,14 @@ def load_polluted_spambase():
     test_target = reader.read(' ', float).flatten()
 
     return train, train_target, test, test_target
+
+
+def load_20p_missing_spambase():
+    reader = CsvReader('data/20_percent_missing_train.txt')
+    train = reader.read(',', float)
+
+    reader = CsvReader('data/20_percent_missing_test.txt')
+    test = reader.read(',', float)
+
+    total_col = train.shape[1]
+    return train[:, :total_col - 1], train[:, total_col - 1], test[:, :total_col - 1], test[:, total_col - 1]

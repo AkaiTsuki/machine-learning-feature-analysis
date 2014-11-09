@@ -145,7 +145,8 @@ class HistogramNaiveBayes:
             bin = self.bins[f]
             bin_count = [1] * possible_value_count
             for val in feature_values:
-                bin_count[self.get_bin_index(val, bin)] += 1
+                if val is not np.NaN:
+                    bin_count[self.get_bin_index(val, bin)] += 1
 
             bin_likelihoods = []
             for c in bin_count:
@@ -193,7 +194,8 @@ class HistogramNaiveBayes:
                 likelihoods = self.likelihoods[l]
                 likelihood = 1.0
                 for f in range(test.shape[1]):
-                    likelihood *= likelihoods[f][self.get_bin_index(t[f], self.bins[f])]
+                    if t[f] is not np.NaN:
+                        likelihood *= likelihoods[f][self.get_bin_index(t[f], self.bins[f])]
                 res.append(likelihood * self.priors[l])
             predicts.append(np.log(res[1] / res[0]))
 
@@ -224,6 +226,16 @@ class BernoulliNaiveBayes(HistogramNaiveBayes):
             mean_value = self.overall_mean[f]
             bin = [min_value, mean_value, max_value]
             self.bins.append(bin)
+
+    @staticmethod
+    def get_mean_vector(train):
+        means = []
+
+        for f in range(train.shape[1]):
+            vals = train[:, f]
+            means.append(vals[~np.isnan(vals)].mean())
+
+        return np.array(means)
 
 
 class NBinsHistogramNaiveBayes(HistogramNaiveBayes):
