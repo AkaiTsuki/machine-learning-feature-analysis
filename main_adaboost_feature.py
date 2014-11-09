@@ -33,5 +33,5 @@ def polluted_spambase(T=100):
 
 
 if __name__ == '__main__':
-    spambase(300)
-    # polluted_spambase(100)
+    # spambase(300)
+    polluted_spambase(100)
