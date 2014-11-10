@@ -1,8 +1,8 @@
 __author__ = 'jiachiliu'
 
-from boost.dataset import load_20p_missing_spambase
-from boost.bayes import BernoulliNaiveBayes
-from boost.validation import *
+from nulearn.dataset import load_20p_missing_spambase
+from nulearn.bayes import BernoulliNaiveBayes
+from nulearn.validation import *
 
 if __name__ == '__main__':
     train, train_target, test, test_target = load_20p_missing_spambase()

@@ -1,11 +1,11 @@
 __author__ = 'jiachiliu'
 
 import numpy as np
-from boost.bayes import GaussianNaiveBayes
+from nulearn.bayes import GaussianNaiveBayes
 import timeit
-from boost.validation import *
-from boost.ranking import *
-from boost.dataset import load_polluted_spambase
+from nulearn.validation import *
+from nulearn.ranking import *
+from nulearn.dataset import load_polluted_spambase
 from sklearn.decomposition import PCA
 from sklearn.lda import LDA
 

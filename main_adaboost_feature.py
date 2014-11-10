@@ -1,8 +1,8 @@
 __author__ = 'jiachiliu'
 
-from boost.cross_validation import train_test_shuffle_split
-from boost.dataset import load_spambase, load_polluted_spambase
-from boost.AdaBoost import AdaBoost
+from nulearn.cross_validation import train_test_shuffle_split
+from nulearn.dataset import load_spambase, load_polluted_spambase
+from nulearn.AdaBoost import AdaBoost
 import numpy as np
 import timeit
 

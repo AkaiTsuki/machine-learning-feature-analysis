@@ -1,11 +1,11 @@
 __author__ = 'jiachiliu'
 
 from sklearn import linear_model
-from boost.dataset import load_polluted_spambase
+from nulearn.dataset import load_polluted_spambase
 import timeit
-from boost.validation import *
-from boost.linear_model import LogisticGradientDescendingRegression, RidgedLogisticRegression
-from boost.preprocessing import normalize, append_new_column
+from nulearn.validation import *
+from nulearn.linear_model import LogisticGradientDescendingRegression, RidgedLogisticRegression
+from nulearn.preprocessing import normalize, append_new_column
 
 
 def ski_lasso(alpha, max_iter):
