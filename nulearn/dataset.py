@@ -1,7 +1,8 @@
 __author__ = 'jiachiliu'
 
-
 import numpy as np
+import random
+
 
 class CsvReader:
     """
@@ -25,6 +26,7 @@ class CsvReader:
                 data.append(row)
 
         return np.array(data, converter)
+
 
 def load_spambase():
     reader = CsvReader('data/spambase.data')
@@ -58,3 +60,36 @@ def load_20p_missing_spambase():
 
     total_col = train.shape[1]
     return train[:, :total_col - 1], train[:, total_col - 1], test[:, :total_col - 1], test[:, total_col - 1]
+
+
+def sample_digital_dataset(train, train_target, test, test_target):
+    sample = None
+    sample_target = None
+    for i in range(10):
+        match = train_target == i
+        match_train = train[match]
+        match_train_target = train_target[match]
+        k = int(len(match_train) * 0.2)
+        if sample is None:
+            sample = match_train[: k]
+            sample_target = match_train_target[: k]
+        else:
+            sample = np.vstack((sample, match_train[: k]))
+            sample_target = np.append(sample_target, match_train_target[: k])
+    return sample, sample_target, test, test_target
+
+
+def load_digital_dataset():
+    reader = CsvReader('data/digital_train_features.txt')
+    train = reader.read(',', float)
+
+    reader = CsvReader('data/digital_train_target.txt')
+    train_target = reader.read(',', float).flatten()
+
+    reader = CsvReader('data/digital_test_features.txt')
+    test = reader.read(',', float)
+
+    reader = CsvReader('data/digital_test_target.txt')
+    test_target = reader.read(',', float).flatten()
+
+    return sample_digital_dataset(train, train_target, test, test_target)

@@ -5,6 +5,10 @@ from pylab import *
 from array import array as pyarray
 import numpy as np
 from numpy import append, array, int8, uint8, zeros
+from nulearn.Haar import Haar
+from nulearn.ECOC import ECOC
+import timeit
+from nulearn.dataset import load_digital_dataset
 
 
 def load_mnist(dataset="training", digits=np.arange(10), path="."):
@@ -45,7 +49,53 @@ def load_mnist(dataset="training", digits=np.arange(10), path="."):
     return images, labels
 
 
-if __name__ == '__main__':
+def write_feature_to_file(path, features):
+    np.savetxt(path, features, delimiter=',', fmt='%d')
+
+
+def extract_feature_to_file():
+    image = np.array(
+        [[0, 0, 0, 0, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1],
+         [0, 0, 0, 0, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1]])
+
     images, labels = load_mnist(dataset="training", path="data")
-    print images[0]
-    print len(labels)
+    haar = Haar()
+    features = haar.extract_features(images, inners=100)
+    write_feature_to_file('data/digital_train_features.txt', features)
+    write_feature_to_file('data/digital_train_target.txt', labels)
+
+    images, labels = load_mnist(dataset="testing", path="data")
+    features = haar.extract_features(images, inners=100)
+    write_feature_to_file('data/digital_test_features.txt', features)
+    write_feature_to_file('data/digital_test_target.txt', labels)
+
+
+def extract_test_feature_to_file():
+    images, labels = load_mnist(dataset="testing", path="data")
+    haar = Haar()
+    features = haar.extract_features(images, inners=100)
+    write_feature_to_file('data/digital_test_features.txt', features)
+    write_feature_to_file('data/digital_test_target.txt', labels)
+
+
+def run_ecoc():
+    start = timeit.default_timer()
+    ecoc = ECOC(10, 20)
+    train, train_target, test, test_target = load_digital_dataset()
+    print "Train: ", train.shape
+    print "Train Target: ", train_target.shape
+    print "Test: ", test.shape
+    print "Test Target: ", test_target.shape
+    ecoc.train(train, train_target, test, test_target, T=50, percentage=1)
+    labels = ecoc.test(test)
+
+    err = 0
+    for pred, act in zip(labels, test_target):
+        if pred != act:
+            err += 1
+    print "Total error: %s" % (1.0 * err / len(test_target))
+    stop = timeit.default_timer()
+    print stop - start
+
+if __name__ == '__main__':
+    run_ecoc()

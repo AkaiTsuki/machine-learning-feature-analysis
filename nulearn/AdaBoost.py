@@ -152,6 +152,14 @@ class AdaBoost:
         """
         return np.array([negative if v <= 0 else positive for v in vals])
 
+    def predict(self, test):
+        h = np.zeros(test.shape[0])
+
+        for f, t, c in self.weak_learners:
+            h += c * self.hypothesis(f, t, test)
+
+        return h
+
     def boost(self, train, train_target, test, test_target, T=100):
         m, n = train.shape
 
