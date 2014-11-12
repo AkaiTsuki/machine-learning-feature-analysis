@@ -91,6 +91,6 @@ def naive_bayes_with_lda():
     print "Total Run Time: %s secs" % (stop - start)
 
 if __name__ == '__main__':
-    naive_bayes_no_pca()
-    # naive_bayes_with_pca()
+    # naive_bayes_no_pca()
+    naive_bayes_with_pca()
     # naive_bayes_with_lda()

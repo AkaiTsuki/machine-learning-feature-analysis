@@ -90,6 +90,20 @@ class LogisticGradientDescendingRegression(StochasticGradientDescendingRegressio
         return map(lambda v: 1 if v >= threshold else 0, vals)
 
 
+class BatchLogisticRegression(LogisticGradientDescendingRegression):
+
+    def fit(self, train, target, alpha=0.0001, max_loop=1300, converge=0.0001, beta=10):
+        m, n = train.shape
+        self.weights = np.ones(n)
+        for k in range(max_loop):
+            prev_error = mse(self.predict(train), target)
+            self.print_progress(k, prev_error)
+            predict = self.predict(train)
+            error = predict - target
+            self.weights -= alpha * (train.T.dot(error) + beta * self.weights)
+
+        return self
+
 class RidgedLogisticRegression(LogisticGradientDescendingRegression):
     def __init__(self):
         LogisticGradientDescendingRegression.__init__(self)

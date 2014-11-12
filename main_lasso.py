@@ -4,7 +4,7 @@ from sklearn import linear_model
 from nulearn.dataset import load_polluted_spambase
 import timeit
 from nulearn.validation import *
-from nulearn.linear_model import LogisticGradientDescendingRegression, RidgedLogisticRegression
+from nulearn.linear_model import LogisticGradientDescendingRegression, RidgedLogisticRegression, BatchLogisticRegression
 from nulearn.preprocessing import normalize, append_new_column
 
 
@@ -30,7 +30,7 @@ def ski_lasso(alpha, max_iter):
     print "Total Run Time: %s secs" % (stop - start)
 
 
-def logistic_regression():
+def logistic_regression(beta):
     train, train_target, test, test_target = load_polluted_spambase()
 
     print "Train data: %s, Train Label: %s" % (train.shape, train_target.shape)
@@ -41,8 +41,8 @@ def logistic_regression():
     train = append_new_column(train, 1.0, 0)
     test = append_new_column(test, 1.0, 0)
 
-    cf = LogisticGradientDescendingRegression()
-    cf.fit(train, train_target)
+    cf = BatchLogisticRegression()
+    cf.fit(train, train_target, beta=beta, converge=0, max_loop=1000)
     predict_values = cf.predict(test)
     predict_classes = cf.convert_to_binary(predict_values)
     cm = confusion_matrix(test_target, predict_classes)
@@ -71,6 +71,6 @@ def ridged_logistic_regression():
     print 'Error rate: %f, accuracy: %f, FPR: %f, TPR: %f' % (er, acc, fpr, tpr)
 
 if __name__ == '__main__':
-    # ski_lasso(0.005, 10000)
-    # logistic_regression()
-    ridged_logistic_regression()
+    ski_lasso(0.005, 10000)
+    logistic_regression(0)
+    logistic_regression(100)
